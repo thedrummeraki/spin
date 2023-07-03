@@ -1,0 +1,27 @@
+version: '3.3'
+services:
+  db:
+    image: postgres:15
+    volumes:
+      - ./api/tmp/db:/var/lib/postgresql/data
+    env_file:
+      - ./api/.env.db.local
+  api:
+    build:
+      context: api
+      target: dev
+    env_file:
+      - ./api/.env.db.local
+      - ./api/.env.api.local
+    ports:
+      - 3000:3000
+    volumes:
+      - ./api/:/app
+      - gems:/gems
+    depends_on:
+      - db
+    stdin_open: true
+    tty: true
+
+volumes:
+  gems:
