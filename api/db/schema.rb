@@ -10,8 +10,31 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 0) do
+ActiveRecord::Schema[7.0].define(version: 2023_07_03_200332) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "clusters", force: :cascade do |t|
+    t.string "digitalocean_uuid", null: false
+    t.string "url"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "droplets", force: :cascade do |t|
+    t.string "digitalocean_id", null: false
+    t.bigint "project_request_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "project_requests", force: :cascade do |t|
+    t.string "email", null: false
+    t.string "project_slug", null: false
+    t.string "code"
+    t.datetime "keep_until", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
 
 end
