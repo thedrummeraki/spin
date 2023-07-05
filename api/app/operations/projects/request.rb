@@ -18,8 +18,10 @@ module Projects
 
     def execute
       ensure_request_for_project_not_made!
-      project_request = create_request!
-      create_droplet!(project_request)
+      project_request = create_request! do |project_request|
+        droplet = create_droplet!(project_request)
+        initialize_droplet!(droplet)
+      end
 
       project_request
     end
@@ -35,33 +37,52 @@ module Projects
       raise Projects::Request::ActiveRequestsError.new(active_requests)
     end
 
-    def create_request!
-      ProjectRequest.create!(
+    def create_request!(&block)
+      project_request = ProjectRequest.new(
         email: email,
         project_slug: project_slug,
         keep_until: destroy_in.from_now,
       )
+      ProjectRequest.transaction do
+        project_request.save! 
+        yield(project_request)
+      end
+
+      project_request
     end
 
     def create_droplet!(project_request)
       ddroplet = DropletKit::Droplet.new(
-        name: "#{project_slug}-#{hashed_email}",
+        name: "#{sanitized_project_slug}-#{hashed_email}",
         region: "tor1",
         image: "ubuntu-22-04-x64",
         size: "s-1vcpu-1gb",
+        ssh_keys: ssh_keys.map(&:id),
       )
-      digitalocean_id = Rails.configuration.x.dk_client.droplets.create(
+      digitalocean_id = client.droplets.create(
         ddroplet,
       ).id
 
-      droplet = Droplet.create(
+      Droplet.create!(
         project_request: project_request,
         digitalocean_id: digitalocean_id,
       )
     end
 
+    def initialize_droplet!(droplet)
+      Droplets::Initialize.perform(droplet: droplet)
+    end
+
+    def ssh_keys
+      @ssh_keys ||= client.ssh_keys.all.to_a
+    end
+
     def hashed_email
-      Digest::SHA256.hexdigest(email)
+      Digest::SHA256.hexdigest(email).first(10)
+    end
+
+    def sanitized_project_slug
+      project_slug.gsub('/', '-')
     end
   end
 end

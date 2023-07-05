@@ -3,13 +3,18 @@ class Droplet < ApplicationRecord
   before_destroy :destroy_on_digitalocean
 
   delegate :name, to: :digitalocean_instance, allow_nil: true
+  delegate :public_ip, to: :digitalocean_instance!
 
   def exists_on_digitalocean?
-    digitalocean_instance.present?
+    digitalocean_instance!.present?
   end
 
   def digitalocean_instance
-    @do_instance ||= Rails.configuration.x.dk_client.droplets.find(
+    @do_instance ||= digitalocean_instance!
+  end
+
+  def digitalocean_instance!
+    Rails.configuration.x.dk_client.droplets.find(
       id: digitalocean_id,
     )
   rescue DropletKit::Error

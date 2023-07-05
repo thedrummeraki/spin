@@ -17,11 +17,11 @@ module Projects
       end
 
       def clean_up_expired_projects_later
-        CleanDropletJob.perform_later(email)
+        CleanDropletJob.perform_later(email) if project_requests.any?
       end
 
       def project_requests
-        ProjectRequest.where(
+        @project_requests ||= ProjectRequest.where(
           email: email,
         )
       end

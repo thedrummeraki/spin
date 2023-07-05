@@ -6,24 +6,34 @@ services:
       - ./api/tmp/db:/var/lib/postgresql/data
     env_file:
       - ./api/.env.db.local
-  api:
+
+  redis:
+    image: redis:7.0
+
+  api: &rails
     build:
       context: api
       target: dev
-    env_file:
-      - ./api/.env.db.local
-      - ./api/.env.api.local
     environment:
       - PORT=80
     ports:
       - 80:80
+    env_file:
+      - ./api/.env.db.local
+      - ./api/.env.api.local
     volumes:
       - ./api/:/app
       - gems:/gems
-    depends_on:
-      - db
+      - /home/akinyele/.ssh/:/root/.ssh
     stdin_open: true
     tty: true
+
+  sidekiq:
+    <<: *rails
+    command: bundle exec sidekiq
+    ports: []
+    depends_on:
+      - redis
 
 volumes:
   gems:
