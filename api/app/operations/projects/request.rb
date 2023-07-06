@@ -20,10 +20,13 @@ module Projects
       ensure_request_for_project_not_made!
       project_request = create_request! do |project_request|
         droplet = create_droplet!(project_request)
-        initialize_droplet!(droplet)
       end
-
-      project_request
+      
+      initialize_droplet!(droplet)
+      {
+        project_request: project_request,
+        app_host: project_request.app_host,
+      }
     end
 
     private
@@ -56,7 +59,7 @@ module Projects
         name: "#{sanitized_project_slug}-#{hashed_email}",
         region: "tor1",
         image: "ubuntu-22-04-x64",
-        size: "s-1vcpu-1gb",
+        size: "s-1vcpu-2gb",
         ssh_keys: ssh_keys.map(&:id),
       )
       digitalocean_id = client.droplets.create(

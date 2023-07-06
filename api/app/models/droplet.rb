@@ -21,6 +21,13 @@ class Droplet < ApplicationRecord
     nil
   end
 
+  def app_host(port: 31000, https: false)
+    return unless exists_on_digitalocean?
+
+    klass = https ? URI::HTTPS : URI::HTTP
+    klass.build(host: public_ip, port: port).to_s
+  end
+
   private
 
   def destroy_on_digitalocean
