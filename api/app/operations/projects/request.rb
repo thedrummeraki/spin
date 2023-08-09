@@ -18,74 +18,33 @@ module Projects
 
     def execute
       ensure_request_for_project_not_made!
-      project_request = create_request! do |project_request|
-        droplet = create_droplet!(project_request)
-      end
-      
-      initialize_droplet!(droplet)
-      {
-        project_request: project_request,
-        app_host: project_request.app_host,
-      }
+      project_request = create_request!
+      create_droplet_later(project_request)
+
+      project_request
     end
 
     private
 
     def ensure_request_for_project_not_made!
       existing_requests = ProjectRequest.where(email: email, project_slug: project_slug)
-      active_requests = existing_requests.reject(&:should_be_deleted?)
+      active_requests = existing_requests.reject(&:should_be_deleted?).reject(&:droplet?)
 
       return if active_requests.empty?
 
       raise Projects::Request::ActiveRequestsError.new(active_requests)
     end
 
-    def create_request!(&block)
-      project_request = ProjectRequest.new(
+    def create_request!
+      ProjectRequest.create!(
         email: email,
         project_slug: project_slug,
         keep_until: destroy_in.from_now,
       )
-      ProjectRequest.transaction do
-        project_request.save! 
-        yield(project_request)
-      end
-
-      project_request
     end
 
-    def create_droplet!(project_request)
-      ddroplet = DropletKit::Droplet.new(
-        name: "#{sanitized_project_slug}-#{hashed_email}",
-        region: "tor1",
-        image: "ubuntu-22-04-x64",
-        size: "s-1vcpu-2gb",
-        ssh_keys: ssh_keys.map(&:id),
-      )
-      digitalocean_id = client.droplets.create(
-        ddroplet,
-      ).id
-
-      Droplet.create!(
-        project_request: project_request,
-        digitalocean_id: digitalocean_id,
-      )
-    end
-
-    def initialize_droplet!(droplet)
-      Droplets::Initialize.perform(droplet: droplet)
-    end
-
-    def ssh_keys
-      @ssh_keys ||= client.ssh_keys.all.to_a
-    end
-
-    def hashed_email
-      Digest::SHA256.hexdigest(email).first(10)
-    end
-
-    def sanitized_project_slug
-      project_slug.gsub('/', '-')
+    def create_droplet_later(project_request)
+      CreateDropletJob.perform_later(project_request.id)
     end
   end
 end

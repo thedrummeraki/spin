@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_07_03_200332) do
+ActiveRecord::Schema[7.0].define(version: 2023_07_08_042404) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -21,11 +21,22 @@ ActiveRecord::Schema[7.0].define(version: 2023_07_03_200332) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "domains", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "digitalocean_id"
+    t.bigint "project_request_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["project_request_id"], name: "index_domains_on_project_request_id"
+  end
+
   create_table "droplets", force: :cascade do |t|
     t.string "digitalocean_id", null: false
     t.bigint "project_request_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "app_url"
+    t.string "status", default: "pending", null: false
   end
 
   create_table "project_requests", force: :cascade do |t|
@@ -37,4 +48,15 @@ ActiveRecord::Schema[7.0].define(version: 2023_07_03_200332) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "ssh_keys", force: :cascade do |t|
+    t.string "public_key"
+    t.string "digitalocean_id"
+    t.bigint "droplet_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["droplet_id"], name: "index_ssh_keys_on_droplet_id"
+  end
+
+  add_foreign_key "domains", "project_requests"
+  add_foreign_key "ssh_keys", "droplets"
 end

@@ -1,4 +1,4 @@
-class CleanDropletJob < ApplicationJob
+class StopUserProjectRequestsJob < ApplicationJob
   queue_as :default
 
   def perform(email)

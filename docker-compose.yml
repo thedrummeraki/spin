@@ -10,6 +10,20 @@ services:
   redis:
     image: redis:7.0
 
+  # server:
+  #   build:
+  #     context: server
+  #     target: dev
+  #   environment:
+  #     - PORT=80
+  #   env_file:
+  #     - ./api/.env.api.local
+  #   volumes:
+  #     - ./server/:/app
+  #     - server_gems:/gems
+  #   stdin_open: true
+  #   tty: true
+
   api: &rails
     build:
       context: api
@@ -24,7 +38,8 @@ services:
     volumes:
       - ./api/:/app
       - gems:/gems
-      - /home/akinyele/.ssh/:/root/.ssh
+    depends_on:
+      - db
     stdin_open: true
     tty: true
 
@@ -34,6 +49,8 @@ services:
     ports: []
     depends_on:
       - redis
+      - db
 
 volumes:
   gems:
+  server_gems:
