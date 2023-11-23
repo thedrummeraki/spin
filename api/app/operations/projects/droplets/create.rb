@@ -15,12 +15,6 @@ module Projects
       end
   
       private
-
-      def ensure_exists_on_github!
-        return if Projects::Github::Exists.perform(project_slug: project_slug)
-  
-        raise Errors::NotFound, project_slug
-      end
   
       def create_droplet!
         ssh_key = create_ssh_key!
@@ -62,10 +56,6 @@ module Projects
   
         public_key_filename = "#{private_key_filename}.pub"
         File.read(public_key_filename)
-      end
-
-      def qualified_name
-        QualifiedName.perform(project_slug: project_slug)
       end
 
       def droplet_options

@@ -1,4 +1,4 @@
-class RemoveProjectDroplet < ApplicationJob
+class ProjectDownJob < ApplicationJob
   queue_as :default
 
   def perform(project_slug)

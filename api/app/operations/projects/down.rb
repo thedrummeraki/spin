@@ -49,9 +49,5 @@ module Projects
         client.droplets.delete(id: droplet.id)
       end
     end
-
-    def qualified_name
-      QualifiedName.perform(project_slug: project_slug)
-    end
   end
 end

@@ -70,10 +70,6 @@ module Droplets
       File.read(public_key_filename)
     end
 
-    # def ssh_keys
-    #   @ssh_keys ||= client.ssh_keys.all.to_a
-    # end
-
     def hashed_email
       Digest::SHA256.hexdigest(project_request.email).first(10)
     end

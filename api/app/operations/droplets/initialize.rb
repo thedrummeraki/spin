@@ -10,12 +10,6 @@ module Droplets
 
     private
 
-    def ensure_exists_on_github!
-      return if Projects::Github::Exists.perform(project_slug: project_slug)
-
-      raise Projects::Errors::NotFound, project_slug
-    end
-
     def init_droplet!
       return unless exists_on_digitalocean?
 
