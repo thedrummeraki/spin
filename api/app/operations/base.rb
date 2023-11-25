@@ -12,6 +12,6 @@ class Base < ActiveOperation::Base
   end
 
   def qualified_name
-    QualifiedName.perform(project_slug: project_slug)
+    Projects::QualifiedName.perform(project_slug: project_slug)
   end
 end
