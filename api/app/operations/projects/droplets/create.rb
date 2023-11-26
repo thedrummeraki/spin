@@ -42,19 +42,33 @@ module Projects
         )
   
         Rails.logger.info("Uploading generated SSH key to DigitalOcean...")
-        client.ssh_keys.create(instance)
+        existing_ssh_key = client.ssh_keys.all.find do |ssh_key|
+          ssh_key.public_key == public_key
+        end
+
+        if existing_ssh_key
+          Rails.logger.info("SSH key was already uploaded on DigitalOcean.")
+          existing_ssh_key
+        else
+          client.ssh_keys.create(instance)
+        end
       end
   
       def generate_ssh_key_on_host!
-        Rails.logger.info("Generating SSH key on host...")
         private_key_filename = "#{ENV.fetch('HOME')}/.ssh/id_rsa"
-        command = "ssh-keygen -f #{private_key_filename} -N '' <<< y"
-        bash_command = "bash -c \"#{command}\""
-        
-        # Execute the command
-        %x(#{bash_command})
-  
         public_key_filename = "#{private_key_filename}.pub"
+        
+        if File.exist?(private_key_filename)
+          Rails.logger.info("SSH key on host was already generated.")
+        else
+          Rails.logger.info("SSH key doesn't exist. Generating on host...")
+          command = "ssh-keygen -f #{private_key_filename} -N '' <<< y"
+          bash_command = "bash -c \"#{command}\""
+          
+          # Execute the command
+          %x(#{bash_command})
+        end
+  
         File.read(public_key_filename)
       end
 

@@ -3,7 +3,9 @@ module Projects
     module Repos
       class List < ::Base
         def execute
-          Array.wrap(list_repos_in_org)
+          Rails.cache.fetch('github-repos') do
+            Array.wrap(list_repos_in_org)
+          end
         end
 
         private

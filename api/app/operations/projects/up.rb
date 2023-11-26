@@ -18,6 +18,7 @@ module Projects
     private
 
     def ensure_exists_on_github!
+      Rails.logger.info("Checking if #{project_slug} exists on Github...")
       return if Projects::Github::Exists.perform(project_slug: project_slug)
 
       raise Errors::NotFound, project_slug

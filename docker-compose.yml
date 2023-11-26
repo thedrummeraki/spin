@@ -38,6 +38,7 @@ services:
     volumes:
       - ./api/:/app
       - gems:/gems
+      - ssh:/root/.ssh
     depends_on:
       - db
     stdin_open: true
@@ -54,3 +55,4 @@ services:
 volumes:
   gems:
   server_gems:
+  ssh:

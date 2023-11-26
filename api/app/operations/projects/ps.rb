@@ -3,7 +3,9 @@ module Projects
     property :project_slugs, converts: -> (value) {Array.wrap(value).to_set}
 
     def execute
-      valid_slugs
+      valid_slugs.map do |slug|
+        Projects::QualifiedName.perform(project_slug: slug)
+      end
     end
 
     private
