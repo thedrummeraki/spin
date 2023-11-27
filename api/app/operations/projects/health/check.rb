@@ -10,6 +10,9 @@ module Projects
       # droplet started but cannot be used
       UNKNOWN = :unknown
 
+      # droplet status cannot be reached from here
+      UNREACHABLE = :unreachable
+
       # droplet started but is not yet usable
       INITIALIZING = :initializing
 
@@ -25,6 +28,8 @@ module Projects
       STATES = [OFF].freeze
 
       def execute
+        ensure_ssh_keys!
+
         qualified_names = Projects::Ps.perform
         qualified_names.map do |qualified_name|
           health_options(qualified_name)
@@ -40,8 +45,7 @@ module Projects
           options[:state] = OFF
           return options
         end
-        
-        return options unless 
+
         droplet = find_droplet!(qualified_name)
         with_ssh_client(droplet) do |ssh|
           options.merge!(health_options_droplet_on(ssh, droplet))
@@ -56,7 +60,7 @@ module Projects
         end
       rescue Net::SSH::AuthenticationFailed, Net::SSH::ConnectionTimeout, Errno::ECONNREFUSED => e
         Rails.logger.error("Failed with SSH error: #{e}")
-        yield 'connectrefused'
+        yield nil
       rescue => e
         Rails.logger.error("Unknown SSH error: #{e}")
         yield nil
@@ -72,7 +76,8 @@ module Projects
 
         options[:domain] = domain_for(droplet)
         options[:app_uri] = app_uri_for(droplet)
-        options[:project] = project_status!(ssh, droplet)
+
+        Rails.logger.info("Project status for #{droplet.public_ip}: #{project_status!(ssh, droplet)}")
 
         options
       end
@@ -86,7 +91,9 @@ module Projects
       end
 
       def state_from_droplet_name(ssh, droplet)
-        return BOOTING_UP if droplet.status == 'active' || ssh == 'connectrefused'
+        return UNREACHABLE if ssh.nil? && !ssh_key_exists?
+        return BOOTING_UP if ssh.nil? && ssh_key_exists?
+
         return FAILED if project_failed?(ssh, droplet)
         return WAITING if project_pending?(ssh, droplet)
         return ON if project_running?(ssh, droplet)
@@ -130,7 +137,7 @@ module Projects
 
       def project_pending?(ssh, droplet)
         statuses = project_status!(ssh, droplet)
-        statuses.include?('Pending')
+        statuses.empty? || statuses.include?('Pending') || statuses.include?('bash: line 1: kubectl: command not found')
       rescue Errno::ECONNREFUSED
         false
       end

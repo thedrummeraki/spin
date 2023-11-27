@@ -34,43 +34,41 @@ module Projects
       end
   
       def create_ssh_key!
-        public_key = generate_ssh_key_on_host!
-  
+        public_key, _ = ssh_key_pair
+
         instance = DropletKit::SSHKey.new(
           name: "#{qualified_name}-auto-generated",
           public_key: public_key,
         )
-  
-        Rails.logger.info("Uploading generated SSH key to DigitalOcean...")
-        existing_ssh_key = client.ssh_keys.all.find do |ssh_key|
-          ssh_key.public_key == public_key
-        end
 
-        if existing_ssh_key
+        if ssh_key_uploaded?
           Rails.logger.info("SSH key was already uploaded on DigitalOcean.")
-          existing_ssh_key
+          client.ssh_keys.all.find do |ssh_key|
+            ssh_key.public_key == public_key
+          end
         else
+          Rails.logger.info("Uploading generated SSH key to DigitalOcean...")
           client.ssh_keys.create(instance)
         end
       end
   
-      def generate_ssh_key_on_host!
-        private_key_filename = "#{ENV.fetch('HOME')}/.ssh/id_rsa"
-        public_key_filename = "#{private_key_filename}.pub"
+      # def generate_ssh_key_on_host!
+      #   private_key_filename = "#{ENV.fetch('HOME')}/.ssh/id_rsa"
+      #   public_key_filename = "#{private_key_filename}.pub"
         
-        if File.exist?(private_key_filename)
-          Rails.logger.info("SSH key on host was already generated.")
-        else
-          Rails.logger.info("SSH key doesn't exist. Generating on host...")
-          command = "ssh-keygen -f #{private_key_filename} -N '' <<< y"
-          bash_command = "bash -c \"#{command}\""
+      #   if File.exist?(private_key_filename)
+      #     Rails.logger.info("SSH key on host was already generated.")
+      #   else
+      #     Rails.logger.info("SSH key doesn't exist. Generating on host...")
+      #     command = "ssh-keygen -f #{private_key_filename} -N '' <<< y"
+      #     bash_command = "bash -c \"#{command}\""
           
-          # Execute the command
-          %x(#{bash_command})
-        end
+      #     # Execute the command
+      #     %x(#{bash_command})
+      #   end
   
-        File.read(public_key_filename)
-      end
+      #   File.read(public_key_filename)
+      # end
 
       def droplet_options
         manifest = Projects::Github::Repos::Manifest.perform(project_slug: project_slug)

@@ -16,6 +16,7 @@ RUN apt-get install -y nano iputils-ping
 RUN bundle config set --local without production
 RUN bundle install --jobs 4 --retry 5
 COPY . /app
+COPY ./keys/id_rsa.pub /root/.ssh/id_rsa.pub
 ENTRYPOINT [ "entrypoint.sh" ]
 CMD ["bin/rails", "server", "-b", "0.0.0.0"]
 
@@ -26,5 +27,6 @@ ENV RAILS_LOG_TO_STDOUT enabled
 RUN bundle config set --local without development test
 RUN bundle install --jobs 4 --retry 5
 COPY . /app
+COPY ./keys/id_rsa.pub /root/.ssh/id_rsa.pub
 ENTRYPOINT [ "entrypoint.sh" ]
 CMD ["bin/rails", "server", "-b", "0.0.0.0"]

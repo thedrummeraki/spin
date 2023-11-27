@@ -7,7 +7,7 @@ module Projects
 
     def execute
       remove_domain_record_if_exists!
-      remove_ssh_key_if_exists!
+      remove_ssh_key_if_exists_and_unsued!
       remove_droplet_if_exists!
     end
 
@@ -25,17 +25,17 @@ module Projects
       end
     end
 
-    def remove_ssh_key_if_exists!
-      ssk_key_name = "#{qualified_name}-auto-generated"
-      ssh_keys = client.ssh_keys.all.filter do |ssh_key|
-        ssh_key.name == ssk_key_name
-      end
-      return unless ssh_keys.any?
+    def remove_ssh_key_if_exists_and_unsued!
+      # ssk_key_name = "#{qualified_name}-auto-generated"
+      # ssh_keys = client.ssh_keys.all.filter do |ssh_key|
+      #   ssh_key.name == ssk_key_name
+      # end
+      # return unless ssh_keys.any?
 
-      ssh_keys.each do |ssh_key|
-        Rails.logger.info("Removing SSH key #{ssh_key.name} (#{ssh_key.fingerprint}) ...")
-        client.ssh_keys.delete(id: ssh_key.id)
-      end
+      # ssh_keys.each do |ssh_key|
+      #   Rails.logger.info("Removing SSH key #{ssh_key.name} (#{ssh_key.fingerprint}) ...")
+      #   client.ssh_keys.delete(id: ssh_key.id)
+      # end
     end
 
     def remove_droplet_if_exists!

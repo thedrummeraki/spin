@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  root 'health#check'
+
   resources :users, only: [], param: :email do
     resources :requests, only: [:index, :show, :create]
   end
