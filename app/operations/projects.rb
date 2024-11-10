@@ -1,0 +1,13 @@
+require_relative 'projects/down'
+require_relative 'projects/errors'
+require_relative 'projects/list'
+require_relative 'projects/ps'
+require_relative 'projects/qualified_name'
+require_relative 'projects/request'
+require_relative 'projects/slugify'
+require_relative 'projects/up'
+
+require_relative 'projects/droplets'
+require_relative 'projects/github'
+require_relative 'projects/health'
+require_relative 'projects/requests'

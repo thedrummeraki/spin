@@ -1,4 +1,4 @@
-FROM ruby:3.2.2 as setup
+FROM ruby:3.3.3 as setup
 RUN apt-get update && apt-get install -y libpq-dev build-essential
 RUN gem install bundler:2.4.10
 
@@ -12,6 +12,7 @@ COPY entrypoint.sh /usr/bin
 RUN chmod +x /usr/bin/entrypoint.sh
 
 FROM build as dev
+RUN apt-get update
 RUN apt-get install -y nano iputils-ping
 RUN bundle config set --local without production
 RUN bundle install --jobs 4 --retry 5

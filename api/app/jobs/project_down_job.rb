@@ -1,4 +1,6 @@
-class ProjectDownJob < ApplicationJob
+class ProjectDownJob
+  include Sidekiq::Worker
+
   queue_as :default
 
   def perform(project_slug)
